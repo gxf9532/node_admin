@@ -11,6 +11,9 @@ let cookieParser = require('cookie-parser')
 
 // 引入User的数据库Model
 let User = require('./user.js')
+
+// 引入Category   
+let Category = require('./category')
 // 创建项目应用
 let app = express()
 
@@ -62,6 +65,22 @@ app.post('/login', (req, res) => {
             }
         }
      })
+})
+
+// 处理添加分类
+app.post('/manage/category/add', (req,res) => {
+    let { categoryName } = req.body
+    
+    // 向后台数据库写入 
+    Category.create({ categoryName }, (err, doc) => {
+        if (!err) {
+            res.json({
+                status: 0,
+                doc
+            })
+        }
+    })
+
 })
 // 设置监听端口
 const PORT = 8080
