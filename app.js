@@ -14,6 +14,9 @@ let User = require('./user.js')
 
 // 引入Category   
 let Category = require('./category')
+
+// 引入Role
+let Role = require('./role')
 // 创建项目应用
 let app = express()
 
@@ -31,7 +34,7 @@ app.use(bodyParser.urlencoded({
 
 // 搭建后台路由 
 app.post('/login', (req, res) => {
-    
+
     // 接收post表单传递的信息
     let username = req.body.username || ''
     let password = req.body.password || ''
@@ -39,9 +42,9 @@ app.post('/login', (req, res) => {
         username,
         password
     }
-    
+
     // 从数据库中查找数据
-     User.findOne( loginData, {username: 1, password: 1}, (err, result) => {
+    User.findOne(loginData, { username: 1, password: 1 }, (err, result) => {
         if (err) {
             console.log(err)
         } else {
@@ -60,17 +63,17 @@ app.post('/login', (req, res) => {
                 //     }
                 // })
 
-                res.json({ status: 1, mes: '用户名或密码不正确!'})
+                res.json({ status: 1, mes: '用户名或密码不正确!' })
                 return
             }
         }
-     })
+    })
 })
 
 // 处理添加分类
-app.post('/manage/category/add', (req,res) => {
+app.post('/manage/category/add', (req, res) => {
     let { name, parentId } = req.body
-    
+
     // 向后台数据库写入 
     Category.create({ name, parentId }, (err, doc) => {
         if (!err) {
@@ -87,9 +90,23 @@ app.post('/manage/category/add', (req,res) => {
 app.get('/manage/category/list', (req, res2) => {
     // 获取传递过来的parentId 
     let { parentId } = req.query
-   
+
     // 根据parentId查找分类数据
     Category.find({ parentId }, (err, res) => {
+        res2.json({
+            status: 0,
+            data: res
+        })
+    })
+
+})
+
+
+// 获取所有分类列表
+app.get('/manage/category/listAll', (req, res2) => {
+
+    // 查找分类数据
+    Category.find({}, (err, res) => {
         res2.json({
             status: 0,
             data: res
@@ -102,7 +119,7 @@ app.get('/manage/category/list', (req, res2) => {
 app.post('/manage/category/update', (req, res) => {
     // 接受要修改的分类信息
     const { _id, name } = req.body
-    
+
     // 修改条件
     let conditions = { _id }
 
@@ -124,6 +141,63 @@ app.post('/manage/category/update', (req, res) => {
         }
     })
 })
+
+// 获取所有角色列表
+app.get('/manage/role/list', (req, res) => {
+
+    Role.find({}).then(result => {
+        res.json({
+            status: 0,
+            data: result
+        })
+    })
+        .catch(error => {
+            res.json({
+                status: 1,
+                mes: '获取角色信息失败!'
+            })
+        })
+})
+
+// 添加角色
+app.post('/manage/role/add', (req, res) => {
+    const { name } = req.body
+    Role.create({ name })
+        .then(role => {
+            res.json({
+                status: 0,
+                data: role
+            })
+        }).catch(error => {
+            res.json({
+                status: 1,
+                mes: '添加角色失败!'
+            })
+        })
+
+})
+
+// 更新角色路由
+app.post('/manage/role/update', (req, res) => {
+    // console.log(req.body)
+    const { _id, menus, auth_name } = req.body
+    let auth_time = new Date(new Date().getTime() + new Date().getTimezoneOffset() * 60 * 1000 + 8 * 60 * 60 * 1000)
+    Role.update({ _id }, { menus, auth_name, auth_time })
+        .then(result => {
+            res.json({
+                status: 0,
+                data: result
+            })
+        })
+        .catch(err => {
+            res.json({
+                status: 1,
+                mes: "修改角色信息失败!"
+            })
+        })
+
+})
+
 // 设置监听端口
 const PORT = 8080
 app.listen(PORT)
