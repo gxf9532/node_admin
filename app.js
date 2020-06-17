@@ -9,6 +9,8 @@ let bodyParser = require('body-parser')
 var path = require('path')
 let cookieParser = require('cookie-parser')
 
+let fs = require('fs')
+let multiparty = require('multiparty')
 // 引入User的数据库Model
 let User = require('./user.js')
 
@@ -17,6 +19,8 @@ let Category = require('./category')
 
 // 引入Role
 let Role = require('./role')
+
+let Product = require('./product')
 // 创建项目应用
 let app = express()
 
@@ -142,61 +146,95 @@ app.post('/manage/category/update', (req, res) => {
     })
 })
 
-// 获取所有角色列表
-app.get('/manage/role/list', (req, res) => {
 
-    Role.find({}).then(result => {
-        res.json({
-            status: 0,
-            data: result
-        })
+
+// 根据分类id查找分类路由
+app.get('/manage/category/info', (req, res2) => {
+    const categoryId = req.query.categoryId
+
+    // 根据分类id查找对应分类
+    Category.findOne({
+        _id: categoryId
+    }, (err, res) => {
+
+        if (!err) {
+            res2.json({
+                status: 0,
+                data: res
+            })
+        } else {
+            res2.json({
+                status: 1
+            })
+        }
+
     })
-        .catch(error => {
-            res.json({
-                status: 1,
-                mes: '获取角色信息失败!'
-            })
-        })
 })
 
-// 添加角色
-app.post('/manage/role/add', (req, res) => {
-    const { name } = req.body
-    Role.create({ name })
-        .then(role => {
-            res.json({
-                status: 0,
-                data: role
-            })
-        }).catch(error => {
-            res.json({
-                status: 1,
-                mes: '添加角色失败!'
-            })
-        })
+// 文件上传路由 
+app.post('/manage/img/upload', (req, res2) => {
 
+    let form = new multiparty.Form()
+
+    // 设置上传文件路径
+    form.uploadDir = __dirname + '/public/images/'
+
+    // 解析上传文件
+    form.parse(req, function(err, fields, files) {
+        console.log(files)
+        // 获取上传文件的原名
+        let name = files.image[0].originalFilename
+        let url = files.image[0].path 
+        let uploadName = url.substr(url.lastIndexOf('\\') + 1)
+        url = "http://localhost:" + PORT + "/public/images/" +  uploadName
+        
+        if (!err) {
+            let status = 0
+            let data = {
+                name,
+                url
+            }
+            res2.json({
+                status,
+                data
+            })
+        
+        } else {
+            let status = 1
+            let data = {
+                mes: "上传文件失败!"
+            }
+            res2.json({
+                status,
+                data
+            })
+        }
+       
+    });
 })
 
-// 更新角色路由
-app.post('/manage/role/update', (req, res) => {
-    // console.log(req.body)
-    const { _id, menus, auth_name } = req.body
-    let auth_time = new Date(new Date().getTime() + new Date().getTimezoneOffset() * 60 * 1000 + 8 * 60 * 60 * 1000)
-    Role.update({ _id }, { menus, auth_name, auth_time })
-        .then(result => {
-            res.json({
-                status: 0,
-                data: result
+// 文件删除路由 
+app.post('/manage/img/delete', (req, res2) => {
+    // 获取要删除的文件名
+    const name = req.body.name
+    const url = "public/images"
+    // console.log(name)
+    // 删除后台文件
+    fs.readdirSync(url).map(file => {
+        if (file === name) {
+            // console.log(file)
+            fs.unlink(`${url}/${name}`, err => {
+                if (err) {
+                    res2.json({ status: 1})
+                } else {
+                    res2.json({ status: 0})
+                }
             })
-        })
-        .catch(err => {
-            res.json({
-                status: 1,
-                mes: "修改角色信息失败!"
-            })
-        })
-
+        }
+    })
 })
+
+
 
 // 设置监听端口
 const PORT = 8080
