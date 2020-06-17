@@ -181,7 +181,7 @@ app.post('/manage/img/upload', (req, res2) => {
 
     // 解析上传文件
     form.parse(req, function(err, fields, files) {
-        console.log(files)
+        // console.log(files)
         // 获取上传文件的原名
         let name = files.image[0].originalFilename
         let url = files.image[0].path 
@@ -233,6 +233,28 @@ app.post('/manage/img/delete', (req, res2) => {
         }
     })
 })
+
+// 添加商品路由
+app.post('/manage/product/add', (req, res2) => {
+    let { product } = req.body 
+
+    product.status = 1 // 商品的上架和下架状态
+     // console.log(product) 
+    Product.create(product, (err, msg) => {
+        if (!err) {
+            res2.json({ status: 0, data: msg})
+        } else {
+            res2.json({
+                status: 1, 
+                msg
+            })
+        }
+    })
+
+    
+})
+  
+
 
 
 
