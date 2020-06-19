@@ -253,6 +253,69 @@ app.post('/manage/product/add', (req, res2) => {
 
     
 })
+
+// 查看数据库中是否有同名商品 
+app.get('/manage/product/name', (req, res2) => {
+    const { name } = req.query  
+    // console.log(name)
+    Product.findOne({ name }, (err, res) => {
+        
+        if (!err) {
+            let status = res == null ? 0 : 1
+            res2.json({ status })
+        } else {
+            res2.json({
+                status: 2,
+                mes: "查询失败!"
+            })
+        }
+    })
+})
+
+// 查看所有商品
+app.get('/manage/product/list', (req, res2) => {
+    // 第几页 
+    let pageNum = parseInt(req.query.pageNum)
+    // 每页显示多少条数据 
+    let pageSize = parseInt(req.query.pageSize)
+
+    // 跳过多少条数据
+    let skip = (pageNum -1) * pageSize
+    // 先求出一共有多少条数据
+    Product.count({}, (err, count) => {
+        Product.find({})
+        .skip(skip) // 跳过多少条数据
+        .limit(pageSize) // 取多少条数据截止
+        .sort({
+            '_id': -1
+        }) // 按_id排序(倒序)
+        .exec((err, res) => {
+            try{
+                if (!err && res) {
+                    return res2.json({
+                        status: 0,
+                        data: {
+                            pageNum,
+                            total: count,
+                            pages: Math.ceil(count / pageSize),
+                            pageSize,
+                            list: res
+                        }
+                    })
+                }
+            } catch(e) {
+                return res2.json({
+                    status: 1,
+                    msg: '获取数据失败!'
+                })
+            }
+        }) // 执行语句
+    })
+ 
+    
+    // 一共有多少页 
+    
+})
   
 
 
