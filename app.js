@@ -317,7 +317,42 @@ app.get('/manage/product/list', (req, res2) => {
     
 })
   
+// 添加角色 
+app.post('/manage/role/add', (req, res2) => {
+    const { name } = req.body 
 
+    Role.create({ name })
+    .then(role => {
+        res2.json({
+            status: 0,
+            data: role
+        })
+    }).catch(error => {
+        res2.json({
+            status: 1,
+            mes: "添加角色失败!"
+        })
+    })
+    
+})
+
+// 获取所有角色
+app.get('/manage/role/list', (req, res) => {
+    Role.find({})
+    .sort({
+        '_id': -1
+    }).then(result => {
+        res.json({
+            status: 0,
+            data: result
+        })
+    }).catch(error => {
+        res.json({
+            status: 1,
+            mes:"获取角色列表失败!"
+        })
+    })
+})
 
 
 
