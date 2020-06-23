@@ -354,6 +354,28 @@ app.get('/manage/role/list', (req, res) => {
     })
 })
 
+// 更新角色权限路由
+ app.post('/manage/role/update', (req, res) => {
+    //  console.log(req.body)
+    const {_id, menus, auth_name } = req.body
+    // 设置最新修改时间
+    let auth_time = new Date(new Date().getTime() + new Date().getTimezoneOffset() * 60 * 1000 + 8 * 60 * 60 * 1000)
+    Role.update({ _id }, { menus, auth_name, auth_time })
+    .then(result => {
+        res.json({
+            status: 0,
+            data: result 
+        })
+    })
+    .catch(error => {
+        res.json({
+            status: 1,
+            mes: "修改角色权限失败!"
+        })
+    })
+ })
+
+
 
 
 // 设置监听端口
